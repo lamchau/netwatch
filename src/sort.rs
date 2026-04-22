@@ -30,20 +30,10 @@ pub fn sort_columns_for_tab(tab: Tab) -> &'static [SortColumn] {
 
 pub fn default_sort_states() -> HashMap<Tab, TabSortState> {
     let mut m = HashMap::new();
-    for tab in [
-        Tab::Dashboard,
-        Tab::Connections,
-        Tab::Interfaces,
-        Tab::Processes,
-    ] {
-        m.insert(
-            tab,
-            TabSortState {
-                column: 0,
-                ascending: true,
-            },
-        );
-    }
+    m.insert(Tab::Dashboard, crate::ui::dashboard::DEFAULT_SORT);
+    m.insert(Tab::Connections, crate::ui::connections::DEFAULT_SORT);
+    m.insert(Tab::Interfaces, crate::ui::interfaces::DEFAULT_SORT);
+    m.insert(Tab::Processes, crate::ui::processes::DEFAULT_SORT);
     m
 }
 
@@ -88,7 +78,7 @@ pub fn cmp_ip_addr(a: &str, b: &str) -> Ordering {
 
     // None (wildcard/unparseable) sorts before any real IP
     let ip_ord = match (ip_a, ip_b) {
-        (None, None) => Ordering::Equal,
+        (None, None) => a.cmp(b),
         (None, Some(_)) => Ordering::Less,
         (Some(_), None) => Ordering::Greater,
         (Some(IpAddr::V4(a4)), Some(IpAddr::V4(b4))) => a4.octets().cmp(&b4.octets()),
@@ -103,7 +93,6 @@ pub fn cmp_ip_addr(a: &str, b: &str) -> Ordering {
 /// Compare two bare IP address strings (no port) by parsed octets.
 /// For interface addresses that aren't in host:port format.
 pub fn cmp_ip(a: &str, b: &str) -> Ordering {
-    use std::net::IpAddr;
     let ip_a = a.parse::<IpAddr>().ok();
     let ip_b = b.parse::<IpAddr>().ok();
     match (ip_a, ip_b) {
